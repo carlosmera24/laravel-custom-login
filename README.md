@@ -55,6 +55,23 @@ Es importante destacar que **Laravel** utiliza la tabla **user** para
 
             Route::get('/home', 'HomeController@index')->name('home');
             ```
+        - Auth::routes() genera:
+
+            |  Method  |           URI          |        Name      |                                Action                                  | Middleware |
+            |----------|------------------------|------------------|------------------------------------------------------------------------|------------|
+            | GET/HEAD | login                  | login            | App\Http\Controllers\Auth\LoginController@showLoginForm                | web ,guest |
+            | POST     | login                  |                  | App\Http\Controllers\Auth\LoginController@login                        | web, guest |
+            | POST     | logout                 | logout           | App\Http\Controllers\Auth\LoginController@logout                       | web        |
+            | GET/HEAD | password/confirm       | password.confirm | App\Http\Controllers\Auth\ConfirmPasswordController@showConfirmForm    | web, auth  |
+            | POST     | password/confirm       |                  | App\Http\Controllers\Auth\ConfirmPasswordController@confirm            | web, auth  |
+            | POST     | password/email         | password.email   | App\Http\Controllers\Auth\ForgotPasswordController@sendResetLinkEmail  | web        |
+            | GET/HEAD | password/reset         | password.request | App\Http\Controllers\Auth\ForgotPasswordController@showLinkRequestForm | web        |
+            | POST     | password/reset         | password.update  | App\Http\Controllers\Auth\ResetPasswordController@reset                | web        |
+            | GET/HEAD | password/reset/{token} | password.reset   | App\Http\Controllers\Auth\ResetPasswordController@showResetForm        | web        |
+            | GET/HEAD | register               | register         | App\Http\Controllers\Auth\RegisterController@showRegistrationForm      | web, guest |
+            | POST     | register               |                  | App\Http\Controllers\Auth\RegisterController@register                  | web,guest  |
+            >Es posible eliminar el registro eliminando el método **create** en *RegisterController* y agregar *Auth::routes(['register' => false]);*
+
     A éste punto tenemos instalada toda la estructura necesaria y se han incluido las vistas y accesos para el login y registro, pero no se han cargado los estilos.
 4. Generar archivos del Frontend con npm:
     ```
@@ -210,8 +227,37 @@ De esta manera tenemos preparada la base de datos para trabajar, ahora debemos m
 Hasta aquí estaría listo, sin embargo el formulario solicita un **email** en lugar de **usuario** su validación no permite continuar, esto lo resolvemos cambiando el tipo de campo de *email* a *text* pero login retornará siempre al formulario sin información ya que se envían los parámetros **email** y **password**, y nuestra personalización usa **usuario** y **contrasena**.
 
 ## Modificar formulario de login
-TODO
+Como mencioné anteriormente, el formulario por HTML5 valida que el campo del username sea un **email**, podemos quitarlo modificando el tipo, para ello
+modificamos el archivo *resources/views/auth/login.blade.php* cambiando el tipo de **email** a **text**
+```
+<div class="col-md-6">
+    <input id="email" type="text" class="form-control @error('email') is-invalid @enderror" name="email" value="{{ old('email') }}" required autocomplete="email" autofocus>
 
+```
+A éste punto el formulario funciona y envía los datos, sin embargo nos devuelve a la pantalla de login sin información, esto sucede porque los nombres de los campos de login son **email** y **password**, pero para nuestro caso, los campos son **usuario** y **contrasena**, la razón por la que no se muestran errores es porque el controlador envía los errores sobre el cambo **usuario** pero nuestro formulario tiene el campo **email**, cambiemos los nombres para poder procesar correctamente:
+```
+<div class="form-group row">
+    <label for="usuario" class="col-md-4 col-form-label text-md-right">{{ __('E-Mail Address') }}</label>
 
+    <div class="col-md-6">
+        <input id="usuario" type="text" class="form-control @error('usuario') is-invalid @enderror" name="usuario" value="{{ old('usuario') }}" required autocomplete="email" autofocus>
+
+        @error('usuario')
+            <span class="invalid-feedback" role="alert">
+                <strong>{{ $message }}</strong>
+            </span>
+        @enderror
+    </div>
+</div> 
+``` 
+De esa manera se visualizan los errores y procesa correctamente, no hace falta cambiar el nombre del campo **password** por **contrasena** ya que se modificó el controlador para retornar el valor correcto de ese campo para la base de datos, si cambiamos el nombre no nos mostrará los errores.
+
+## Modificar registro
+Recordemos que si no se reguiere el registro de usuario basta con eliminar el método **create** en **RegisterController** e indicarle al generador de rutas en *routes/web.php* que no se usará el registro:
+```
+Auth::routes(['register' => false]);
+```
+Con solo agregar ésta línea se eliminarán los accesos para el registro. Sin embargo, si deseamos modificarlo debemos realizar lo siguiente:
+1. 
     
 
