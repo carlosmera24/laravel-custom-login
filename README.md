@@ -258,6 +258,48 @@ Recordemos que si no se reguiere el registro de usuario basta con eliminar el m�
 Auth::routes(['register' => false]);
 ```
 Con solo agregar ésta línea se eliminarán los accesos para el registro. Sin embargo, si deseamos modificarlo debemos realizar lo siguiente:
-1. 
+1. Modificar el controlador *app/Http/Controllers/Auth/RegisterController.php*:
+    - Agregar validación con nuestro campo **usuario**
+    ```
+    protected function validator(array $data)
+    {
+        return Validator::make($data, [
+            'usuario' => ['required', 'string', 'max:255', 'unique:usuarios,usuario'],
+            'contrasena' => Hash::make($data['password']),
+        ]);
+    }
+    ```
+    - Modificar el método de creación:
+    ```
+    use App\Usuario;
+
+    protected function create(array $data)
+    {
+        return Usuario::create([
+            'usuario' => $data['usuario'],
+            'password' => Hash::make($data['password']),
+        ]);
+    }
+    ```
+2. Modificar formulario con los campos correctos de nuestro modelo *resources/views/auth/register.blade.php*:
+    Agregar campo usuario en lugar de email:
+    ```
+    <div class="form-group row">
+        <label for="usuario" class="col-md-4 col-form-label text-md-right">{{ __('User') }}</label>
+
+        <div class="col-md-6">
+            <input id="usuario" type="text" class="form-control @error('usuario') is-invalid @enderror" name="usuario" value="{{ old('usuario') }}" required autocomplete="email">
+
+            @error('usuario')
+                <span class="invalid-feedback" role="alert">
+                    <strong>{{ $message }}</strong>
+                </span>
+            @enderror
+        </div>
+    </div>
+    ```
+## Ajustes pendientes
+Podría quedar pendiente el recuperar la contraseña y el cambio de la misma.
+    
     
 
